@@ -1,2 +1,4 @@
 userdata.sh
 .tfvars
+.terraform.lock.hcl
+.terraform
