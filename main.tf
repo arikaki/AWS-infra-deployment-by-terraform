@@ -88,7 +88,7 @@ resource "aws_instance" "webserver2" {
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.webSg.id]
   subnet_id              = aws_subnet.sub2.id
-  user_data              = base64encode(file("userdata1.sh"))
+  user_data              = base64encode(file("userdata.sh"))
 }
 
 #create alb
