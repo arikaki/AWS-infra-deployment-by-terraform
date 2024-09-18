@@ -1,17 +1,17 @@
 resource "aws_vpc" "myvpc" {
-  cidr_block = var.cidr
+  cidr_block = var.vpc_cidr
 }
 
 resource "aws_subnet" "sub1" {
   vpc_id                  = aws_vpc.myvpc.id
-  cidr_block              = "10.0.0.0/24"
+  cidr_block              = var.sub1_cidr
   availability_zone       = "us-east-1a"
   map_public_ip_on_launch = true
 }
 
 resource "aws_subnet" "sub2" {
   vpc_id                  = aws_vpc.myvpc.id
-  cidr_block              = "10.0.1.0/24"
+  cidr_block              = var.sub2_cidr
   availability_zone       = "us-east-1b"
   map_public_ip_on_launch = true
 }
@@ -24,7 +24,7 @@ resource "aws_route_table" "RT" {
   vpc_id = aws_vpc.myvpc.id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block = var.route_cidr
     gateway_id = aws_internet_gateway.igw.id
   }
 }
@@ -71,12 +71,21 @@ resource "aws_security_group" "webSg" {
 }
 
 resource "aws_s3_bucket" "example" {
-  bucket = "abhisheksterraform2023project"
+  bucket = "aws-infra-deploy-by-terraform"
 }
+
+#resource "aws_s3_bucket_public_access_block" "example" {
+#  bucket = aws_s3_bucket.example.id
+
+#  block_public_acls       = false
+#  block_public_policy     = false
+#  ignore_public_acls      = false
+#  restrict_public_buckets = false
+#}
 
 
 resource "aws_instance" "webserver1" {
-  ami                    = "ami-0261755bbcb8c4a84"
+  ami                    = var.ami_instance
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.webSg.id]
   subnet_id              = aws_subnet.sub1.id
@@ -84,7 +93,7 @@ resource "aws_instance" "webserver1" {
 }
 
 resource "aws_instance" "webserver2" {
-  ami                    = "ami-0261755bbcb8c4a84"
+  ami                    = var.ami_instance
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.webSg.id]
   subnet_id              = aws_subnet.sub2.id
@@ -140,6 +149,4 @@ resource "aws_lb_listener" "listener" {
   }
 }
 
-output "loadbalancerdns" {
-  value = aws_lb.myalb.dns_name
-}
+
