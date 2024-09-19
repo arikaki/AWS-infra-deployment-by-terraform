@@ -89,7 +89,11 @@ resource "aws_instance" "webserver1" {
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.webSg.id]
   subnet_id              = aws_subnet.sub1.id
-  user_data              = base64encode(file("userdata.sh"))
+  user_data              = base64encode(file("userdata-v1.sh"))
+  iam_instance_profile   = aws_iam_instance_profile.ec2_s3_instance_profile.name
+  tags = {
+    Name = "EC2InstanceWithS3Access"
+  }
 }
 
 resource "aws_instance" "webserver2" {
@@ -97,7 +101,11 @@ resource "aws_instance" "webserver2" {
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.webSg.id]
   subnet_id              = aws_subnet.sub2.id
-  user_data              = base64encode(file("userdata.sh"))
+  user_data              = base64encode(file("userdata-v2.sh"))
+  iam_instance_profile   = aws_iam_instance_profile.ec2_s3_instance_profile.name
+  tags = {
+    Name = "EC2InstanceWithS3Access"
+  }
 }
 
 #create alb
@@ -149,4 +157,50 @@ resource "aws_lb_listener" "listener" {
   }
 }
 
+# Create the IAM role
+resource "aws_iam_role" "ec2_s3_access_role" {
+  name = "ec2-s3-access-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+    }]
+  })
+}
+
+# Attach a policy to allow EC2 to access the S3 bucket
+resource "aws_iam_policy" "ec2_s3_access_policy" {
+  name        = "EC2S3AccessPolicy"
+  description = "Policy to allow EC2 instance to access specific S3 bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket"
+      ]
+      Effect   = "Allow"
+      Resource = aws_s3_bucket.example.arn
+    }]
+  })
+}
+
+# Attach the policy to the IAM role
+resource "aws_iam_role_policy_attachment" "ec2_s3_access_attachment" {
+  role       = aws_iam_role.ec2_s3_access_role.name
+  policy_arn = aws_iam_policy.ec2_s3_access_policy.arn
+}
+
+# Create an instance profile for EC2
+resource "aws_iam_instance_profile" "ec2_s3_instance_profile" {
+  name = "ec2-s3-access-instance-profile"
+  role = aws_iam_role.ec2_s3_access_role.name
+}
 
