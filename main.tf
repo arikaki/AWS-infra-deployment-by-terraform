@@ -92,7 +92,7 @@ resource "aws_instance" "webserver1" {
   user_data              = base64encode(file("userdata-v1.sh"))
   iam_instance_profile   = aws_iam_instance_profile.ec2_s3_instance_profile.name
   tags = {
-    Name = "EC2InstanceWithS3Access"
+    Name = "EC2InstanceWithS3Access-v1"
   }
 }
 
@@ -104,7 +104,7 @@ resource "aws_instance" "webserver2" {
   user_data              = base64encode(file("userdata-v2.sh"))
   iam_instance_profile   = aws_iam_instance_profile.ec2_s3_instance_profile.name
   tags = {
-    Name = "EC2InstanceWithS3Access"
+    Name = "EC2InstanceWithS3Access-v2"
   }
 }
 
